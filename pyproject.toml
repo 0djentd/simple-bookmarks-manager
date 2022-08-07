@@ -1,8 +1,11 @@
 [tool.poetry]
 name = "simple-bookmarks-manager"
 version = "0.1.0"
-description = ""
-authors = ["0djentd <58089540+0djentd@users.noreply.github.com>"]
+description = "Browser-agnostic bookmarks manager."
+authors = ["0djentd"]
+
+[tool.poetry.scripts]
+simple-bookmarks-manager = "simple_bookmarks_manager.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
