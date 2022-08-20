@@ -39,12 +39,17 @@ class Bookmark(BaseModel):
         return json.dumps(self.dict())
 
 
-def _create_bookmarks_file(context):
-    bookmarks_file = context.obj.bookmarks
+def _create_bookmarks_file(context) -> None:
+    config = context.obj
+    if not config.create_bookmarks_file:
+        return
+    bookmarks_file = config.bookmarks
+    if os.path.exists(bookmarks_file):
+        if os.path.isfile(bookmarks_file):
+            return
     os.makedirs(os.path.dirname(bookmarks_file))
     with open(bookmarks_file, "w", encoding="utf-8") as file:
         file.write("")
-    return
 
 
 def _read_bookmarks(context) -> List:
@@ -56,14 +61,14 @@ def _read_bookmarks(context) -> List:
     return result
 
 
-def _open_in_browser(url):
+def _open_in_browser(context, url):
     webbrowser.open_new_tab(url)
 
 
 def _check_if_already_in_bookmarks(context, url) -> Optional[Bookmark]:
-    for x in _read_bookmarks(context):
-        if x.url == url:
-            return x
+    for bookmark in _read_bookmarks(context):
+        if bookmark.url == url:
+            return bookmark
     return None
 
 
