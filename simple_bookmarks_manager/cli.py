@@ -23,9 +23,18 @@ _DATA_DIR = appdirs.user_data_dir(
 _DEFAULT_BOOKMARKS_FILE = os.path.join(_DATA_DIR, "bookmarks")
 
 
+def _create_bookmarks_file(context):
+    bookmarks_file = context.obj.bookmarks
+    os.makedirs(os.path.dirname(bookmarks_file))
+    with open(bookmarks_file, "w", encoding="utf-8") as file:
+        file.write("")
+    return
+
+
 class Config(BaseModel):
     bookmarks: str
     debug: bool = False
+    create_bookmarks_file: bool = False
 
 
 class Bookmark(BaseModel):
@@ -41,9 +50,11 @@ class Bookmark(BaseModel):
 @click.option("--bookmarks", type=str,
               default=_DEFAULT_BOOKMARKS_FILE, help="Path to bookmarks file")
 @click.option("--debug", type=bool, default=False)
+@click.option("--create-bookmarks-file/--no-create-bookmarks-file", default=False)
 @click.pass_context
 def commands(context, *args, **kwargs):
     context.obj = Config(**kwargs)
+    _create_bookmarks_file(context)
 
 
 def _read_bookmarks(context) -> List:
