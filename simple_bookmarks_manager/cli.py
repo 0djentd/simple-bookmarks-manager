@@ -52,12 +52,13 @@ def _create_bookmarks_file(context) -> None:
         file.write("")
 
 
-def _read_bookmarks(context) -> List:
+def _load_bookmarks(context) -> List:
     config = context.obj
     result = []
     with open(config.bookmarks, "r", encoding="utf-8") as file:
         for line in file:
-            result.append(Bookmark(url=line))
+            data = json.loads(line)
+            result.append(Bookmark(**data))
     return result
 
 
@@ -66,7 +67,7 @@ def _open_in_browser(context, url):
 
 
 def _check_if_already_in_bookmarks(context, url) -> Optional[Bookmark]:
-    for bookmark in _read_bookmarks(context):
+    for bookmark in _load_bookmarks(context):
         if bookmark.url == url:
             return bookmark
     return None
@@ -108,6 +109,14 @@ def add_bookmark_from_clipboard(context, *args, **kwargs):
     url = pyperclip.copy()
     _add_to_bookmarks(context, url)
     return
+
+
+@commands.command("list")
+@click.pass_context
+def list_bookmarks(context, *args, **kwargs):
+    bookmarks = _load_bookmarks(context)
+    for bookmark in bookmarks:
+        print(bookmark.url)
 
 
 @commands.command("open")
