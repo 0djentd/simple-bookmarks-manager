@@ -1,5 +1,6 @@
 import os
 import json
+import webbrowser
 
 from typing import Optional, List
 
@@ -23,14 +24,6 @@ _DATA_DIR = appdirs.user_data_dir(
 _DEFAULT_BOOKMARKS_FILE = os.path.join(_DATA_DIR, "bookmarks")
 
 
-def _create_bookmarks_file(context):
-    bookmarks_file = context.obj.bookmarks
-    os.makedirs(os.path.dirname(bookmarks_file))
-    with open(bookmarks_file, "w", encoding="utf-8") as file:
-        file.write("")
-    return
-
-
 class Config(BaseModel):
     bookmarks: str
     debug: bool = False
@@ -46,15 +39,12 @@ class Bookmark(BaseModel):
         return json.dumps(self.dict())
 
 
-@click.group(help=_HELP_TEXT)
-@click.option("--bookmarks", type=str,
-              default=_DEFAULT_BOOKMARKS_FILE, help="Path to bookmarks file")
-@click.option("--debug", type=bool, default=False)
-@click.option("--create-bookmarks-file/--no-create-bookmarks-file", default=False)
-@click.pass_context
-def commands(context, *args, **kwargs):
-    context.obj = Config(**kwargs)
-    _create_bookmarks_file(context)
+def _create_bookmarks_file(context):
+    bookmarks_file = context.obj.bookmarks
+    os.makedirs(os.path.dirname(bookmarks_file))
+    with open(bookmarks_file, "w", encoding="utf-8") as file:
+        file.write("")
+    return
 
 
 def _read_bookmarks(context) -> List:
@@ -64,6 +54,10 @@ def _read_bookmarks(context) -> List:
         for line in file:
             result.append(Bookmark(url=line))
     return result
+
+
+def _open_in_browser(url):
+    webbrowser.open_new_tab(url)
 
 
 def _check_if_already_in_bookmarks(context, url) -> Optional[Bookmark]:
@@ -82,6 +76,18 @@ def _add_to_bookmarks(context, url) -> None:
     return
 
 
+@click.group(help=_HELP_TEXT)
+@click.option("--bookmarks", type=str,
+              default=_DEFAULT_BOOKMARKS_FILE, help="Path to bookmarks file")
+@click.option("--debug", type=bool, default=False)
+@click.option("--create-bookmarks-file/--no-create-bookmarks-file",
+              default=False)
+@click.pass_context
+def commands(context, *args, **kwargs):
+    context.obj = Config(**kwargs)
+    _create_bookmarks_file(context)
+
+
 @commands.command("add")
 @click.argument("urls", nargs=-1)
 @click.pass_context
@@ -97,6 +103,14 @@ def add_bookmark_from_clipboard(context, *args, **kwargs):
     url = pyperclip.copy()
     _add_to_bookmarks(context, url)
     return
+
+
+@commands.command("open")
+@click.argument("urls", nargs=-1)
+@click.pass_context
+def open_in_browser(context, urls, *args, **kwargs):
+    for url in urls:
+        _open_in_browser(context, url)
 
 
 def main():
